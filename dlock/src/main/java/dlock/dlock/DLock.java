@@ -4,22 +4,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs.Ids;
-import org.apache.zookeeper.ZooKeeper;
 
 public class DLock {
-	private final ZooKeeper zookeeper;
+	private final ZooKeeperLockService zookeeper;
 	private final String resourcePath;
 
 	private final int RETRY_INTERVAL = 500;
 
 	private String lockPath = null;
 
-	public DLock(ZooKeeper zookeeper, String resourcePath) {
+	public DLock(ZooKeeperLockService zookeeper, String resourcePath) {
 		this.zookeeper = zookeeper;
 		this.resourcePath = resourcePath;
 	}
@@ -40,8 +37,7 @@ public class DLock {
 
 	private void doLock() throws KeeperException, InterruptedException {
 		final String lockName = "lock-";
-		lockPath = zookeeper.create(resourcePath + "/" + lockName, null, Ids.OPEN_ACL_UNSAFE,
-				CreateMode.EPHEMERAL_SEQUENTIAL);
+		lockPath = zookeeper.createLockNode(resourcePath + "/" + lockName);
 
 		final Object lock = new Object();
 
@@ -80,7 +76,7 @@ public class DLock {
 		}
 
 		try {
-			zookeeper.delete(lockPath, -1);
+			zookeeper.deleteLockNode(lockPath);
 			lockPath = null;
 		} catch (InterruptedException | KeeperException e) {
 			throw new DLockException("failed to release the lock", e);

@@ -17,13 +17,13 @@ import org.apache.zookeeper.ZooKeeper;
 
 public class Demo {
 	private ExecutorService executor;
-	private ZooKeeper zookeeper;
+	private ZooKeeperLockService zookeeper;
 	private String resourcePath;
 
 	public static void main(String[] args)
 			throws IOException, InterruptedException, KeeperException, ExecutionException {
 		
-		ZooKeeper zookeeper = getZooKeeper();
+		ZooKeeperLockService zookeeper = getZooKeeperLockService();
 
 		// the following znode path should exist in zookeeper server(s)
 		final String path = "/test";
@@ -32,7 +32,7 @@ public class Demo {
 		zookeeper.close();
 	}
 	
-	private static ZooKeeper getZooKeeper() throws IOException, InterruptedException {
+	private static ZooKeeperLockService getZooKeeperLockService() throws IOException, InterruptedException {
 		final CountDownLatch countDownLatch = new CountDownLatch(1);
 		final String CONN_STRING = "localhost:2181";
 		final int TIMEOUT = 2000;
@@ -47,10 +47,10 @@ public class Demo {
 
 		countDownLatch.await();
 		
-		return zookeeper;
+		return new ZooKeeperLockServiceImpl(zookeeper);
 	}
 
-	private Demo(ZooKeeper zookeeper, String resourcePath) {
+	private Demo(ZooKeeperLockService zookeeper, String resourcePath) {
 		this.executor = Executors.newFixedThreadPool(4);
 		this.zookeeper = zookeeper;
 		this.resourcePath = resourcePath;
@@ -83,11 +83,11 @@ public class Demo {
 }
 
 class Locker implements Runnable {
-	private ZooKeeper zookeeper;
+	private ZooKeeperLockService zookeeper;
 	private String path;
 	private int id;
 
-	public Locker(ZooKeeper zookeeper, String path, int id) {
+	public Locker(ZooKeeperLockService zookeeper, String path, int id) {
 		this.zookeeper = zookeeper;
 		this.path = path;
 		this.id = id;
