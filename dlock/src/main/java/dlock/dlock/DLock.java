@@ -53,15 +53,23 @@ public class DLock {
 						lock.notifyAll();
 					}
 				});
-				
+
 				Collections.sort(children);
-				if (lockPath.endsWith(children.get(0))) {
-					return;
-				} else {
-					// some events may get lost
-					// retry interval should be set to avoid wait forever
-					lock.wait(RETRY_INTERVAL);
+				for (String child : children) {
+					if (!child.startsWith(lockName)) {
+						continue;
+					}
+
+					if (lockPath.endsWith(child)) {
+						return;
+					} else {
+						break;
+					}
 				}
+
+				// some events may get lost
+				// retry interval should be set to avoid wait forever
+				lock.wait(RETRY_INTERVAL);
 			}
 		}
 	}
